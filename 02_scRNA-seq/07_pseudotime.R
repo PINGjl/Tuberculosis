@@ -76,7 +76,7 @@ saveRDS(germ_part_monocle,"Mono_Mac_celltype_monocle_marker150.rds")
 #重排序并作图 ####
 germ_part_monocle<-readRDS("Mono_Mac_celltype_monocle_marker150.rds")
 #germ_part_monocle<-orderCells(germ_part_monocle,root_state = 5)
-germ_part_monocle$group<-factor(germ_part_monocle$group,levels=c("Ctrl","A_TB","F_TB"))
+germ_part_monocle$group<-factor(germ_part_monocle$group,levels=c("Ctrl","AL_TB","L_TB"))
 getPalette = colorRampPalette(brewer.pal(12, "Paired"))
 pdf("plot_pseudotime_by_pseudotime.pdf")#,width=6,height=5
 p=plot_cell_trajectory(germ_part_monocle, color_by = "Pseudotime",cell_size=1.5,show_branch_points = F)
