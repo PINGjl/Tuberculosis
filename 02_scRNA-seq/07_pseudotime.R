@@ -18,10 +18,10 @@ showtext_auto()
 set.seed(2)
 options(future.globals.maxSize = 26000 * 1024^2)
 setwd("/05_Result/07_co_lung/01_ref/12_pseudotime/Mono_Mac/")
-cell_order<-c("Classical_MC","Nonclassical_MC","Mac1","Mac2")
-cell_color<-c("Classical_MC"="#e2a461","Nonclassical_MC"='#fb832d',"Mac1"='#cc759d',"Mac2"="#ebc3d5") 
-age_order<-c("Ctrl","A_TB","F_TB")
-age_color<-c("Ctrl"='#47B1B6', "A_TB"='#CEB7B3', "F_TB"='#E6949A')
+cell_order<-c("Classical_MC","Nonclassical_MC","Mac2")
+cell_color<-c("Classical_MC"="#e2a461","Nonclassical_MC"='#fb832d',"Mac2"="#ebc3d5") 
+age_order<-c("Ctrl","AL_TB","L_TB")
+age_color<-c("Ctrl"='#47B1B6', "AL_TB"='#CEB7B3', "L_TB"='#E6949A')
 my_theme <- theme(#legend.position = "NULL",axis.ticks.x = element_blank(),
   axis.title = element_blank(),
   panel.border = element_blank(),panel.grid=element_blank(),panel.background=element_blank(),
