@@ -57,19 +57,19 @@ sample_normalize <- function(tmp, i){
   print(paste0(i ,' completed'))
 }
 
-for (sample in c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'A_TB-1', 'A_TB-2', 'A_TB-3', 'F_TB-1', 'F_TB-2', 'F_TB-3')){
+for (sample in c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'AL_TB-1', 'AL_TB-2', 'AL_TB-3', 'L_TB-1', 'L_TB-2', 'L_TB-3')){
   tmp <- read_in_sample(sample)
   assign(sample, tmp)
 }
 
-for (sample in c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'A_TB-1', 'A_TB-2', 'A_TB-3', 'F_TB-1', 'F_TB-2', 'F_TB-3')){
+for (sample in c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'AL_TB-1', 'AL_TB-2', 'AL_TB-3', 'L_TB-1', 'L_TB-2', 'L_TB-3')){
   tmp <- sample_normalize(get(sample), sample)
   assign(sample, tmp)
 }
 
 #SCT
 dims <- list(c(1:30), c(1:30), c(1:30),c(1:30),c(1:30), c(1:30), c(1:30),c(1:30),c(1:30), c(1:30), c(1:30),c(1:30),c(1:30))
-samples <- c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'A_TB-1', 'A_TB-2', 'A_TB-3', 'F_TB-1', 'F_TB-2', 'F_TB-3')
+samples <- c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'AL_TB-1', 'AL_TB-2', 'AL_TB-3', 'L_TB-1', 'L_TB-2', 'L_TB-3')
 res <- c(0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8)
 
 for (i in seq(1:13)){
