@@ -16,7 +16,7 @@ Idents(object) <- "Time"
 
 #### input DEGs list
 deg_list <- as.data.frame(matrix(nrow=0,ncol=9))
-for (i in c("A_TB-Ctrl","F_TB-A_TB","F_TB-Ctrl")){
+for (i in c("AL_TB-Ctrl","L_TB-AL_TB","L_TB-Ctrl")){
 	DEGs_scRNA.list <- read.csv(paste0('/05_Result/07_co_lung/01_ref/05_DEGs/',i,'_deg.csv'),header=T)
 	deg_list=rbind(deg_list,DEGs_scRNA.list)
 }
@@ -25,7 +25,7 @@ time_select_gene <- unique(as.vector(deg_list$gene))
 object_matrix <- GetAssayData(object = object)[time_select_gene, ]
 
 #### Make all time points have the same number of cells by downsampling
-time <- c("Ctrl", "A_TB", "F_TB") ### time point
+time <- c("Ctrl", "AL_TB", "L_TB") ### time point
 CellID <- c()
 Sample_ID <- c()
 Sample_Size <- 500 ### Set the sample size
@@ -144,8 +144,8 @@ cluster_cols <- colorRampPalette(brewer.pal(8,"Dark2"))(num_clusters)
 names(cluster_cols) <- 1:num_clusters
 
 ann_colors = list(Time = c("Ctrl"='#c9caca',
-                           "A_TB"='#a0c3d5',
-                           "F_TB"='#4b2415'),
+                           "AL_TB"='#a0c3d5',
+                           "L_TB"='#4b2415'),
                   Cluster = cluster_cols)
 
 ph_res <- pheatmap(heatmap_matrix[, ], useRaster = TRUE, cluster_cols = FALSE,
@@ -182,7 +182,7 @@ for (i in c(1:5)){
 	p <- ggplot(df,aes(x=order, y=expression))+
 		geom_smooth(formula = y~poly(x,15),method = lm,size = 1,alpha = 1,color="#EE3B3B",se=FALSE)+ 
 		stat_smooth(aes(group=gene),formula = y~poly(x,15),method= lm, size = 0.02,linetype=2, alpha = 0.05,color="#6495ED",se=FALSE)+
-		scale_x_continuous(limits=c(1,1500), breaks=seq(250, 1250, 500),label = c("Ctrl","A_TB","F_TB"))+
+		scale_x_continuous(limits=c(1,1500), breaks=seq(250, 1250, 500),label = c("Ctrl","AL_TB","L_TB"))+
 		geom_vline(xintercept=c(1,500,1000,1500),lty=4,col="#000000",lwd=0.6)+
 		theme(panel.grid=element_blank())+
 		theme_bw()
