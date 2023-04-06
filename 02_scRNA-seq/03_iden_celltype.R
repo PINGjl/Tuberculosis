@@ -13,7 +13,7 @@ lung <- readRDS(file = '/05_Result/07_co_lung/01_ref/02_int/umap.rds')
 DefaultAssay(lung) <- "RNA"
 lung <- NormalizeData(object = lung, normalization.method = "LogNormalize")
 
-celltypes <- c("AT1","AT2","Cil","Clu_Gob", "EC","Stroma",'Mast',"Classical_MC","Nonclassical_MC","Mac1","Mac2","Neu","mDC","pDC",'CD4+TC',"CD8+TC",'NK',"NKT","BC","Pla",'MKI67+_pro')
+celltypes <- c("AT1","AT2","Ciliated","Clu_Gob", "EC","Stroma",'Mast',"Classical_MC","Nonclassical_MC","Mac1","Mac2","Neu","mDC","pDC",'CD4+TC',"CD8+TC",'NK',"NKT","BC","Pla",'MKI67+_pro')
 C1 <- c(40)
 C2 <- c(19,42)
 C3 <- c(23,33)
@@ -85,7 +85,7 @@ lung@meta.data$celltype<-lung@active.ident
 write.csv(lung@meta.data,"/05_Result/07_co_lung/01_ref/04_celltype/Combination_al.csv", row.names =FALSE)
 
 # cell proportion ####
-samples <- c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'A_TB-1', 'A_TB-2', 'A_TB-3', 'F_TB-1', 'F_TB-2', 'F_TB-3')
+samples <- c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'AL_TB-1', 'AL_TB-2', 'AL_TB-3', 'L_TB-1', 'L_TB-2', 'L_TB-3')
 lung$sample <- factor(lung$sample, levels=samples)
 cell_number=table(Idents(lung),lung$sample)
 write.csv(cell_number,"/05_Result/07_co_lung/01_ref/04_celltype/cell_number_all_al.csv")
