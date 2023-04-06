@@ -4,7 +4,7 @@ library(harmony)
 library(ggplot2)
 library(future)
 set.seed(2)
-samples <- c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'A_TB-1', 'A_TB-2', 'A_TB-3', 'F_TB-1', 'F_TB-2', 'F_TB-3')
+samples <- c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'AL_TB-1', 'AL_TB-2', 'AL_TB-3', 'L_TB-1', 'L_TB-2', 'L_TB-3')
 for (i in c(1:13)) {
  tmp <- readRDS(file = paste0("/05_Result/07_co_lung/01_ref/01_qc/",samples[i],"/",samples[i],"_final.rds"))
  assign(samples[i],tmp)
