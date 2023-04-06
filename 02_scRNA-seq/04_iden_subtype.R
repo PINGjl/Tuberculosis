@@ -10,7 +10,7 @@ library(patchwork)
 library(Rserve)
 set.seed(2)
 lung <- readRDS(file = "/07_co_lung/01_ref/04_celltype/Combination_celltype.rds")
-lung <- subset(lung, celltype %in% c("AT1","AT2","Cil","Clu_Club","EC","Stroma"))
+lung <- subset(lung, celltype %in% c("AT1","AT2","Ciliated","Clu_Club","EC","Stroma"))
 
 int.list <- SplitObject(lung, split.by = "sample")
 
