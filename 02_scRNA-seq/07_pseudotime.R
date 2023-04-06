@@ -1,4 +1,3 @@
-.libPaths("/R/x86_64-pc-linux-gnu-library/4.0")
 library(Seurat)
 library(dplyr)
 library(stringr)
@@ -32,12 +31,12 @@ my_theme <- theme(#legend.position = "NULL",axis.ticks.x = element_blank(),
 lung <- readRDS(file = "/05_Result/07_co_lung/01_ref/04_celltype/Combination_celltype.rds")
 germ_part <- subset(lung, celltype %in% cell_order)
 rm(lung)
-# ¶Ô±í´ï¾ØÕóºÍmeta¾ØÕó½øÐÐdownsample ####
+# å¯¹è¡¨è¾¾çŸ©é˜µå’ŒmetaçŸ©é˜µè¿›è¡Œdownsample ####
 exp_mat<-as.matrix(GetAssayData(germ_part,slot="counts"))
 sample_mat<-exp_mat
 sample_mat<-sample_mat[rowSums(sample_mat)!=0,]
 sample_germ_part<-germ_part[[]]
-# ´´½¨CDS¶ÔÏó ####
+# åˆ›å»ºCDSå¯¹è±¡ ####
 pd<-data.frame(sample_germ_part)
 fd<-data.frame(gene_short_name=rownames(sample_mat),row.names=rownames(sample_mat))
 pd <- new("AnnotatedDataFrame", data = pd)
@@ -51,16 +50,16 @@ germ_part_monocle <- newCellDataSet(as(as.matrix(sample_mat), "sparseMatrix"),
 germ_part_monocle<-estimateSizeFactors(germ_part_monocle)
 germ_part_monocle<-estimateDispersions(germ_part_monocle)
 head(fData(germ_part_monocle))
-# ¹ýÂË»ùÒò ####
+# è¿‡æ»¤åŸºå›  ####
 germ_part_monocle<-detectGenes(germ_part_monocle,min_expr=1) 
-length(rownames(germ_part_monocle)) # ´ËÊ±ÓÐ17273¸ö»ùÒò
+length(rownames(germ_part_monocle)) # æ­¤æ—¶æœ‰17273ä¸ªåŸºå› 
 expressed_genes<-rownames(subset(fData(germ_part_monocle),num_cells_expressed>=50))
 length(expressed_genes)
 germ_part_monocle<-germ_part_monocle[expressed_genes,]
-#¹ýÂËµôÔÚÐ¡ÓÚ50¸öÏ¸°ûÖÐ±í´ïµÄ»ùÒò£¬»¹Ê£10357¸ö»ùÒò¡£
+#è¿‡æ»¤æŽ‰åœ¨å°äºŽ50ä¸ªç»†èƒžä¸­è¡¨è¾¾çš„åŸºå› ï¼Œè¿˜å‰©10357ä¸ªåŸºå› ã€‚
 saveRDS(germ_part_monocle,"Mono_Mac_celltype_monocle_filter.rds")
 
-# ÕÒ¸ß±äÒì»ùÒò²¢ÅÅÐò ####
+# æ‰¾é«˜å˜å¼‚åŸºå› å¹¶æŽ’åº ####
 germ_part_monocle <- readRDS("Mono_Mac_celltype_monocle_filter.rds")
 celltype_marker <- read.csv("celltype_marker.csv")
 celltype_marker <- celltype_marker %>% group_by(cluster) %>% top_n(n = 150,wt = avg_log2FC)
@@ -74,7 +73,7 @@ germ_part_monocle<-reduceDimension(germ_part_monocle, max_components=2, method='
 germ_part_monocle<-orderCells(germ_part_monocle)
 saveRDS(germ_part_monocle,"Mono_Mac_celltype_monocle_marker150.rds")
 
-#ÖØÅÅÐò²¢×÷Í¼ ####
+#é‡æŽ’åºå¹¶ä½œå›¾ ####
 germ_part_monocle<-readRDS("Mono_Mac_celltype_monocle_marker150.rds")
 #germ_part_monocle<-orderCells(germ_part_monocle,root_state = 5)
 germ_part_monocle$group<-factor(germ_part_monocle$group,levels=c("Ctrl","A_TB","F_TB"))
@@ -92,14 +91,14 @@ p=plot_cell_trajectory(germ_part_monocle, color_by = "group",cell_size=1.5,show_
 print(p)
 dev.off()
 
-# ²é¿´TFsÔÚÎ±Ê±¼ä¹ì¼£ÉÏµÄÏà¶Ô±í´ï ####
+# æŸ¥çœ‹TFsåœ¨ä¼ªæ—¶é—´è½¨è¿¹ä¸Šçš„ç›¸å¯¹è¡¨è¾¾ ####
 setwd("/05_Result/07_co_lung/01_ref/12_pseudotime/Mono_Mac/final/")
 tfs_list <- c("PPARG","BHLHE41","TCF7L2")
 pic <- plot_genes_in_pseudotime(germ_part_monocle[tfs_list,], color_by = "celltype")
 pdf("expression_level_tf_Celltype.pdf")
 print(pic)
 dev.off()
-# µ¥Ï¸°û¹ì¼£µÄ¡°·ÖÖ§¡±·ÖÎö ####
+# å•ç»†èƒžè½¨è¿¹çš„â€œåˆ†æ”¯â€åˆ†æž ####
 BEAM_res <- BEAM(germ_part_monocle[virgene,], branch_point = 1) 
 #BEAM_res <- BEAM(germ_part_monocle, branch_point = 1)
 BEAM_res <- BEAM_res[order(BEAM_res$qval),]
@@ -108,13 +107,13 @@ head(BEAM_res)
 write.csv(BEAM_res,"BEAM_res.csv",row.names = F)
 my_color <- colorRampPalette(colors = rev(x = brewer.pal(n = 11, name = "RdYlGn")))(n=62)
 p <- plot_genes_branched_heatmap(germ_part_monocle[row.names(BEAM_res),],
-		branch_point = 1, #»æÖÆµÄÊÇÄÄ¸ö·ÖÖ§
-		num_clusters = 5, #·Ö³É¼¸¸öcluster£¬¸ù¾ÝÐèÒªµ÷Õû
+		branch_point = 1, #ç»˜åˆ¶çš„æ˜¯å“ªä¸ªåˆ†æ”¯
+		num_clusters = 5, #åˆ†æˆå‡ ä¸ªclusterï¼Œæ ¹æ®éœ€è¦è°ƒæ•´
 		cores = 1,
 		use_gene_short_name = T,hmcols = my_color,
 		show_rownames = T,return_heatmap = TRUE, branch_colors = c('#DA561D','#0E5B49','#7C5674'))
 ggsave("branched_time_heatmap.pdf",p$ph_res, width = 6.5, height = 16)
-# È¡³öcluster¼°Æä»ùÒò
+# å–å‡ºclusteråŠå…¶åŸºå› 
 clusters <- cutree(p$ph_res$tree_row, k = 5)
 clustering <- data.frame(clusters)
 clustering[,1] <- as.character(clustering[,1])
