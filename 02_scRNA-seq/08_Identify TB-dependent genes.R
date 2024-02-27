@@ -1,192 +1,221 @@
-library(Seurat)
-library(monocle)
-library(htmlwidgets)
-library(ggpubr)
-library(pheatmap)
-library(colorRamps)
-library(dplyr)
+library(tidyverse)
 library(RColorBrewer)
-library(magrittr)
-
-options(stringsAsFactors=F)
-
-#### object is an S4 object processed by seurat software
-object <- readRDS("/05_Result/07_co_lung/01_ref/04_celltype/Combination_celltype.rds")
-Idents(object) <- "Time"
+library(patchwork)
+library(Seurat)
+library(pheatmap)
+setwd("/01_result/07_lung/00_scRNA_new/05_DEGs/up_up-down_down")
 
 #### input DEGs list
 deg_list <- as.data.frame(matrix(nrow=0,ncol=9))
-for (i in c("AL_TB-Ctrl","L_TB-AL_TB","L_TB-Ctrl")){
-	DEGs_scRNA.list <- read.csv(paste0('/05_Result/07_co_lung/01_ref/05_DEGs/',i,'_deg.csv'),header=T)
-	deg_list=rbind(deg_list,DEGs_scRNA.list)
+for (i in c("A_TB-Ctrl","F_TB-A_TB","F_TB-Ctrl")){
+        DEGs_scRNA.list <- read.csv(paste0('/01_result/07_lung/00_scRNA_new/05_DEGs/',i,'_deg_025.csv'),header=T)
+        deg_list=rbind(deg_list,DEGs_scRNA.list)
 }
-time_select_gene <- unique(as.vector(deg_list$gene))
+deg <- unique(deg_list[,c('gene','celltype')])
 
-object_matrix <- GetAssayData(object = object)[time_select_gene, ]
+lung <- readRDS(file = "/01_result/07_lung/00_scRNA_new/04_celltype/Combination_celltype.rds")
+lung$group <- factor(lung$group,
+                             levels=c("Ctrl", "A_TB", "F_TB"), ordered=TRUE)
 
-#### Make all time points have the same number of cells by downsampling
-time <- c("Ctrl", "AL_TB", "L_TB") ### time point
-CellID <- c()
-Sample_ID <- c()
-Sample_Size <- 500 ### Set the sample size
-for (m in time) {
-  sub_sample <- subset(object@meta.data,group%in%m) %>% rownames(.) %>% as.vector()
-  set.seed(176)
-  sample_id <- sample(x=sub_sample,size=Sample_Size,replace=T) ### Set the sample size for each sample 
-  Sample_ID <- c(Sample_ID,sample_id)
-  cellid <- paste0(m,"_",c(1:Sample_Size))
-  CellID <- c(CellID,cellid)
-}
+source("loess_smooth_heatmap.R")
 
-anno_cell_sample <- data.frame(Sample_ID,CellID)
+celltypes <- c("AT1","AT2","Cil","Clu_Gob", "EC","Stroma",'Mast',"cMC","nMC","Mac1","Mac2","Neu","DC",'CD4+TC',"CD8+TC",'NK',"NKT","BC","Pla",'MKI67+_pro')
 
-all_sample_matrix <- c()
-all_cell_num <- length(time)*Sample_Size
-for (i in 1:all_cell_num) {
-  if (i==1) {
-    all_sample_matrix <- object_matrix[,which(colnames(object_matrix)%in%Sample_ID[i])] %>% as.matrix()
-  }else{
-    sample_matrix <- object_matrix[,which(colnames(object_matrix)%in%Sample_ID[i])] %>% as.matrix()
-    all_sample_matrix <- cbind(all_sample_matrix,sample_matrix)
-  }
-}
+#deg$celltype <- str_replace(deg$celltype, " ", "_")
 
-colnames(all_sample_matrix) <- CellID
+lung$celltype <- factor(lung$celltype,
+                             levels=celltypes, ordered=TRUE)
 
-meta <- data.frame(Sample_ID=rownames(object@meta.data), Time=object@meta.data$group)
-for (i in 1:all_cell_num) {
-  if (i==1) {
-    all_sample_meta <- meta[which(meta$Sample_ID%in%Sample_ID[i]),] %>% as.data.frame()
-  }else{
-    sample_meta <- meta[which(meta$Sample_ID%in%Sample_ID[i]),] %>% as.data.frame()
-    all_sample_meta <- rbind(all_sample_meta,sample_meta)
-  }
-}
-all_sample_meta <- merge(all_sample_meta, anno_cell_sample, by="Sample_ID") %>% .[!duplicated(.),]
-rownames(all_sample_meta) <- as.vector(all_sample_meta$CellID)
-all_sample_meta$CellID <- factor(all_sample_meta$CellID, levels = CellID)
-all_sample_meta <- all_sample_meta[order(all_sample_meta$CellID,decreasing = F),]
+ct_cluster_list <- celltypes %>%
+    map(~{
+        message(.x)
+        ct_data <- lung %>%
+            subset(celltype == .x)
+        ct_gene_list <- deg %>%
+            subset(celltype == .x)
 
-count_matrix <- all_sample_matrix
+        ct_mat <- get_log2cpm_mat(ct_data,
+            group, celltype,
+            gene_list = ct_gene_list$gene,
+            sample_number = 200)
+        ct_mat <- smooth_data(ct_mat)
 
-### Smoothing single-cell sequencing data
+        setNames(list(ct_mat), .x)
+    }) %>%
+    unlist(recursive = F)
 
-##create pd
-pd <- all_sample_meta
-##create fd
-fd <- as.data.frame(rownames(all_sample_matrix))
-colnames(fd) <- "gene_short_name"
-rownames(fd) <- fd$gene_short_name
-my_cds <- newCellDataSet(count_matrix,
-                         phenoData = new("AnnotatedDataFrame", data = pd),
-                         featureData = new("AnnotatedDataFrame", data = fd))
-DelayedArray:::set_verbose_block_processing(TRUE)
+diff_gene_mat <- ct_cluster_list %>%
+    imap_dfr(~{
+        mat <- .x
+        ct <- .y
 
-#Accessors and generic functions used in the context of count datasets
-my_cds <- estimateSizeFactors(my_cds)
-my_cds <- estimateDispersions(my_cds)
+        gene_list <- mat$gene_anno %>%
+            filter(type != "other")
+        mat_up <- mat$mat.smooth[gene_list$id, ]
 
-time_select_gene <- as.data.frame(time_select_gene)
-colnames(time_select_gene) <- "gene"
+        colnames(mat_up) <- str_c(substr(colnames(mat_up),1,4), "-", seq(dim(mat_up)[2])) 
+        # rownames(mat_up) <- str_c( .y, "_Up_", rownames(mat_up))
 
-length.out <- nrow(pData(my_cds))
-times.df <- seq(0.1,100,length.out = length.out)
-pData(my_cds)$age_time <- times.df
+        mat_up %>%
+            as_tibble(rownames = "id") %>%
+            left_join(mat$gene_anno) %>%
+            mutate(
+                gene = id,
+                celltype = ct,
+                id = str_c(ct, "_", id))
+    })
+
+diff_gene_mat %>%
+    write_csv("diff_gene_mat.csv")
 
 
-hclust_method = "ward.D2"
-num_clusters = 5 #### Set the number of clusters
-scale_max = 3
-scale_min = -3
-cores = 20
+diff_gene_mat %>%
+    group_by(celltype, type) %>%
+    summarise(n = n()) %>%
+    write_csv("diff_gene_summary.csv")
 
-num_clusters <- min(num_clusters, nrow(my_cds))
-pseudocount <- 1
-newdata <- data.frame(age_time = seq(min(pData(my_cds)$age_time),
-                                     max(pData(my_cds)$age_time), length.out = all_cell_num))
+source("sc_utils.R")
 
-### Fit smooth spline curves and return the response matrix
-smooth_mat <- genSmoothCurves(my_cds, cores = cores, trend_formula = "~sm.ns(age_time, df=3)",
-                     relative_expr = T, new_data = newdata)
-smooth_mat = smooth_mat[!apply(smooth_mat, 1, sum) == 0, ]
-smooth_mat = vstExprs(my_cds, expr_matrix = smooth_mat)
-smooth_mat = smooth_mat[!apply(smooth_mat, 1, sd) == 0, ]
-smooth_mat = Matrix::t(scale(Matrix::t(smooth_mat), center = TRUE))
-smooth_mat = smooth_mat[is.na(row.names(smooth_mat)) == FALSE, ]
-smooth_mat[is.nan(smooth_mat)] = 0
-smooth_mat[smooth_mat > scale_max] = scale_max
-smooth_mat[smooth_mat < scale_min] = scale_min
+diff_gene_mat %>%
+    select(celltype, type, gene) %>%
+    filter(type == "Up") %>%
+    tibble_to_lists(celltype, col_name = "gene") %>%
+    write_csv("diff_gene_list_up.csv")
 
-heatmap_matrix <- smooth_mat
-row_dist <- as.dist((1 - cor(Matrix::t(heatmap_matrix)))/2)
-row_dist[is.na(row_dist)] <- 1
+diff_gene_mat %>%
+    select(celltype, type, gene) %>%
+    filter(type == "Down") %>%
+    tibble_to_lists(celltype, col_name = "gene") %>%
+    write_csv("diff_gene_list_down.csv")
 
-bks <- seq(-3.1, 3.1, by = 0.1)
-hmcols <- blue2green2red(length(bks) - 1)
-ph <- pheatmap(heatmap_matrix, useRaster = TRUE, cluster_cols = FALSE,
-               cluster_rows = TRUE, show_rownames = FALSE, show_colnames = FALSE,
-               clustering_distance_rows = row_dist, clustering_method = hclust_method,
-               cutree_rows = num_clusters, silent = TRUE, filename = NA,
-               breaks = bks, border_color = NA, color = hmcols)
-ggsave("/05_Result/07_co_lung/01_ref/05_DEGs/time/ph_plot_6.pdf", plot = ph, width = 5, height = 6)
-annotation_row <- data.frame(Cluster = factor(cutree(ph$tree_row, num_clusters)))
+diff_gene_mat %>%
+    select(celltype, type, gene) %>%
+    write_csv("age_dependent_gene.csv")
 
-feature_label <- as.character(fData(my_cds)[row.names(heatmap_matrix),"gene_short_name"])
-feature_label[is.na(feature_label)] <- row.names(heatmap_matrix)
-row.names(heatmap_matrix) <- feature_label
-colnames(heatmap_matrix) <- c(1:ncol(heatmap_matrix))
+read_csv("age_dependent_gene.csv") %>%
+    filter(type != "Other") %>%
+    write_csv("age_dependent_gene_up_down.csv")
 
-annotation_col <- data.frame(Time = rep(time,each=Sample_Size))
-annotation_col$Time <- factor(annotation_col$Time,levels = time)
-row.names(annotation_col) <- 1:all_cell_num
+##############################################
 
-cluster_cols <- colorRampPalette(brewer.pal(8,"Dark2"))(num_clusters)
-names(cluster_cols) <- 1:num_clusters
+celltype_full <- c("AT1","AT2","Cil","Clu_Gob", "EC","Stroma",'Mast',"cMC","nMC","Mac1","Mac2","Neu","DC",'CD4+TC',"CD8+TC",'NK',"NKT","BC","Pla",'MKI67+_pro')
+CT.col <- c('#c72e29','#d5695d','#F39B7FB2',"#E64B35B2",
+"#F0E68C",'#ddd954',
+'#804588',"#e2a461",'#fb832d','#cc759d',"#ebc3d5","#c0d8b9","#80bbb2",
+'#a0c167','#4b9748',"#00A087B2",'#59a77f','#779eb9','#346e9a','#955025')
+celltype_cols <- CT.col %>%
+    setNames(celltype_full)
+#celltype_cols <- celltype_cols[-c(10, 14)]
 
-ann_colors = list(Time = c("Ctrl"='#c9caca',
-                           "AL_TB"='#a0c3d5',
-                           "L_TB"='#4b2415'),
-                  Cluster = cluster_cols)
+group_cols <- c("Ctrl"='#47B1B6', "A_TB"='#CEB7B3', "F_TB"='#E6949A')
+SpectralColors <- colorRampPalette(colors = RColorBrewer::brewer.pal(n = 11, name = "RdBu") %>% rev())
 
-ph_res <- pheatmap(heatmap_matrix[, ], useRaster = TRUE, cluster_cols = FALSE,
-                   cluster_rows = TRUE, show_rownames = FALSE,
-                   show_colnames = FALSE, clustering_distance_rows = row_dist,
-                   clustering_method = hclust_method, cutree_rows = num_clusters,
-                   annotation_row = annotation_row, annotation_col = annotation_col,
-                   annotation_colors = ann_colors,annotation_names_row = FALSE,annotation_names_col = FALSE,
-                   treeheight_row = 0, breaks = bks, fontsize = 8, color = hmcols,
-                   border_color = NA, silent = TRUE, filename = NA)
-pdf("/05_Result/07_co_lung/01_ref/05_DEGs/time/Time_dependent_DEGs_heatmap_6.pdf",height = 6,width = 5)
-ph_res
-dev.off()
+up_mat <- diff_gene_mat %>%
+    filter(type == "Up") %>%
+    select(-c(type, gene, slope)) %>%
+    mutate(celltype = factor(celltype, levels = celltypes)) %>%
+    group_nest(celltype) %>%
+    arrange(celltype) %>%
+    mutate(
+        data = map(data, ~{
+            d <- .x %>%
+                select(-id) %>%
+                dist() %>%
+                hclust()
+            .x[d$order,]
+        })
+    ) %>%
+    unnest(data) %>%
+    column_to_rownames("id") %>%
+    select(-celltype)
 
-### Get clustering for each gene
-clusters <- cutree(ph_res$tree_row, k = num_clusters)
-clustering <- data.frame(clusters)
-clustering[,1] <- as.numeric(clustering[,1])
-colnames(clustering) <- "Gene_Clusters"
-clustering$Gene <- rownames(clustering)
-clustering <- clustering[order(clustering$Gene_Clusters,decreasing = F),]
 
-write.csv(clustering,"/05_Result/07_co_lung/01_ref/05_DEGs/time/Time_dependent_DEGs_clustering_6.csv",row.names = F)
+up_row_anno <- diff_gene_mat %>%
+    filter(type == "Up") %>%
+    column_to_rownames("id") %>%
+    select(celltype)
 
-#####曲线图######
-library(reshape2)
-for (i in c(1:5)){
-	tmp <- subset(clustering,Gene_Clusters==i)
-	gene <- tmp$Gene
-	newdata <- heatmap_matrix[gene,]
-	df <- melt(newdata)
-	colnames(df) <- c("gene","order",'expression')
-	
-	p <- ggplot(df,aes(x=order, y=expression))+
-		geom_smooth(formula = y~poly(x,15),method = lm,size = 1,alpha = 1,color="#EE3B3B",se=FALSE)+ 
-		stat_smooth(aes(group=gene),formula = y~poly(x,15),method= lm, size = 0.02,linetype=2, alpha = 0.05,color="#6495ED",se=FALSE)+
-		scale_x_continuous(limits=c(1,1500), breaks=seq(250, 1250, 500),label = c("Ctrl","AL_TB","L_TB"))+
-		geom_vline(xintercept=c(1,500,1000,1500),lty=4,col="#000000",lwd=0.6)+
-		theme(panel.grid=element_blank())+
-		theme_bw()
-	pdf(paste0("/05_Result/07_co_lung/01_ref/05_DEGs/time/cluster_",i,".pdf"),height = 3,width = 3.5)
-	p
-	dev.off()
-}
+up_col_anno <- data.frame(
+    Group = str_extract(colnames(up_mat), "^[YMO]"),
+    row.names = colnames(up_mat)
+)
+
+up_row_anno$celltype <- factor(up_row_anno$celltype, levels = celltypes) 
+gaps_row <- cumsum(table(up_row_anno$celltype))
+
+p <- pheatmap::pheatmap(
+    up_mat,
+    cluster_rows = F,
+    cluster_cols = F,
+    show_rownames = F,
+    show_colnames = F,
+    annotation_names_row = F,
+    annotation_row = up_row_anno,
+    # annotation_col = up_col_anno,
+    annotation_legend = F,
+    legend = F,
+    scale = "row",
+    color = colorRampPalette(colors = brewer.pal(n = 11, name = "RdBu") %>% rev())(100),
+    gaps_row = gaps_row[-12],
+    annotation_colors = list(
+        celltype = celltype_cols,
+        Group = group_cols)
+)
+
+ggsave("up_gene.png", plot = p, width = 5, height = 12)
+ggsave("up_gene.pdf", plot = p, width = 5, height = 12)
+
+
+down_mat <- diff_gene_mat %>%
+    filter(type == "Down") %>%
+    select(-c(type, gene, slope)) %>%
+    mutate(celltype = factor(celltype, levels = celltypes)) %>%
+    group_nest(celltype) %>%
+    arrange(celltype) %>%
+    mutate(
+        data = map(data, ~{
+            d <- .x %>%
+                select(-id) %>%
+                dist() %>%
+                hclust()
+            .x[d$order,]
+        })
+    ) %>%
+    unnest(data) %>%
+    column_to_rownames("id") %>%
+    select(-celltype)
+
+down_row_anno <- diff_gene_mat %>%
+    filter(type == "Down") %>%
+    column_to_rownames("id") %>%
+    select(celltype)
+
+down_col_anno <- data.frame(
+    Group = str_extract(colnames(down_mat), "^[YMO]"),
+    row.names = colnames(down_mat)
+)
+
+gaps_row <- table(down_row_anno$celltype)
+gaps_row <- cumsum(gaps_row[celltypes])
+
+p <- pheatmap::pheatmap(
+    down_mat,
+    cluster_rows = F,
+    cluster_cols = F,
+    show_rownames = F,
+    show_colnames = F,
+    annotation_names_row = F,
+    annotation_row = down_row_anno,
+    # annotation_col = down_col_anno,
+    annotation_legend = F,
+    legend = F,
+    scale = "row",
+    color = colorRampPalette(colors = brewer.pal(n = 11, name = "RdBu") %>% rev())(100),
+    gaps_row = gaps_row[-12],
+    annotation_colors = list(
+        celltype = celltype_cols,
+        Group = group_cols)
+)
+
+ggsave("down_gene.png", plot = p, width = 5, height = 12)
+ggsave("down_gene.pdf", plot = p, width = 5, height = 12)
