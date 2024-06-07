@@ -6,7 +6,7 @@ library(ggridges)
 library(showtext)
 
 Combination <- readRDS(file = "/05_Result/07_co_lung/01_ref/04_celltype/Combination_celltype.rds")
-celltypes <- c("AT1","AT2","Ciliated","Clu_Gob", "EC","Stroma",'Mast',"Classical_MC","Nonclassical_MC","Mac1","Mac2","Neu","mDC","pDC",'CD4+TC',"CD8+TC",'NK',"NKT","BC","Pla",'MKI67+_pro')
+celltypes <- c("AT1","AT2","Cil","Clu_Gob", "EC","Stroma",'Mast',"cMC","nMC","Mac1","Mac2","Neu","DC",'CD4+TC',"CD8+TC",'NK',"NKT","BC","Pla",'MKI67+_pro')
 gene_list=read.csv("/05_Result/07_co_lung/01_ref/09_gene_score/gene_list.csv")
 
 for (i in c(1:10) ){
