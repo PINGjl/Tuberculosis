@@ -24,7 +24,7 @@ read_in_sample <- function(i){
   ggsave(paste0("/05_Result/07_co_lung/01_ref/01_qc/",i,"/",i,"_Scatter.pdf"),plot = plot3, width = 8, height = 4)
   saveRDS(tmp, file = paste0("/05_Result/07_co_lung/01_ref/01_qc/",i,"/",i,"_before_qc.rds"))
   
-  tmp <- subset(tmp, subset = percent.MT < 10 & nFeature_RNA > 200 )#& nFeature_RNA < 7000
+  tmp <- subset(tmp, subset = percent.MT < 10 & nFeature_RNA > 500 )#& nFeature_RNA < 7000
   p <- VlnPlot(tmp, features = c("nFeature_RNA", "nCount_RNA", "percent.MT"), ncol = 3)
   ggsave(paste0("/05_Result/07_co_lung/01_ref/01_qc/",i,"/",i,"_qc_vln.pdf"), plot = p, width = 10, height = 6)
   saveRDS(tmp, file = paste0("/05_Result/07_co_lung/01_ref/01_qc/",i,"/",i,"_after_qc.rds"))
