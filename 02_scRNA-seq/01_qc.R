@@ -57,26 +57,26 @@ sample_normalize <- function(tmp, i){
   print(paste0(i ,' completed'))
 }
 
-for (sample in c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'AL_TB-1', 'AL_TB-2', 'AL_TB-3', 'L_TB-1', 'L_TB-2', 'L_TB-3')){
+for (sample in c('Ctrl-1', 'Ctrl-3', 'Ctrl-2', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'AL_TB-1', 'L_TB-1', 'AL_TB-2', 'L_TB-2', 'AL_TB-3', 'L_TB-3', 'Ctrl-8', 'Ctrl-9', 'Ctrl-10', 'Ctrl-11', 'Ctrl-12', 'Ctrl-13', 'AL_TB-4', 'AL_TB-5', 'AL_TB-6', 'AL_TB-7', 'AL_TB-8', 'AL_TB-9', 'AL_TB-10', 'AL_TB-11', 'AL_TB-12', 'L_TB-4', 'L_TB-5', 'L_TB-6', 'L_TB-7', 'L_TB-8', 'L_TB-9', 'L_TB-10', 'L_TB-11', 'L_TB-12')){
   tmp <- read_in_sample(sample)
   assign(sample, tmp)
 }
 
-for (sample in c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'AL_TB-1', 'AL_TB-2', 'AL_TB-3', 'L_TB-1', 'L_TB-2', 'L_TB-3')){
+for (sample in c('Ctrl-1', 'Ctrl-3', 'Ctrl-2', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'AL_TB-1', 'L_TB-1', 'AL_TB-2', 'L_TB-2', 'AL_TB-3', 'L_TB-3', 'Ctrl-8', 'Ctrl-9', 'Ctrl-10', 'Ctrl-11', 'Ctrl-12', 'Ctrl-13', 'AL_TB-4', 'AL_TB-5', 'AL_TB-6', 'AL_TB-7', 'AL_TB-8', 'AL_TB-9', 'AL_TB-10', 'AL_TB-11', 'AL_TB-12', 'L_TB-4', 'L_TB-5', 'L_TB-6', 'L_TB-7', 'L_TB-8', 'L_TB-9', 'L_TB-10', 'L_TB-11', 'L_TB-12')){
   tmp <- sample_normalize(get(sample), sample)
   assign(sample, tmp)
 }
 
 #SCT
-dims <- list(c(1:30), c(1:30), c(1:30),c(1:30),c(1:30), c(1:30), c(1:30),c(1:30),c(1:30), c(1:30), c(1:30),c(1:30),c(1:30))
-samples <- c('Ctrl-1', 'Ctrl-2', 'Ctrl-3', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'AL_TB-1', 'AL_TB-2', 'AL_TB-3', 'L_TB-1', 'L_TB-2', 'L_TB-3')
-res <- c(0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8)
+dims <- c(1:30)
+samples <- c('Ctrl-1', 'Ctrl-3', 'Ctrl-2', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'AL_TB-1', 'L_TB-1', 'AL_TB-2', 'L_TB-2', 'AL_TB-3', 'L_TB-3', 'Ctrl-8', 'Ctrl-9', 'Ctrl-10', 'Ctrl-11', 'Ctrl-12', 'Ctrl-13', 'AL_TB-4', 'AL_TB-5', 'AL_TB-6', 'AL_TB-7', 'AL_TB-8', 'AL_TB-9', 'AL_TB-10', 'AL_TB-11', 'AL_TB-12', 'L_TB-4', 'L_TB-5', 'L_TB-6', 'L_TB-7', 'L_TB-8', 'L_TB-9', 'L_TB-10', 'L_TB-11', 'L_TB-12')
+res <- 0.8
 
 for (i in seq(1:13)){
   tmp <- readRDS(file = paste0("/05_Result/07_co_lung/01_ref/01_qc/",samples[i],"/",samples[i],"_bfPCR.rds"))
-  tmp <- RunUMAP(tmp, dims = dims[[i]], verbose=F)
-  tmp <- FindNeighbors(tmp, reduction = "pca", dims = dims[[i]])
-  tmp <- FindClusters(tmp, res=res[i])
+  tmp <- RunUMAP(tmp, dims = dims, verbose=F)
+  tmp <- FindNeighbors(tmp, reduction = "pca", dims = dims)
+  tmp <- FindClusters(tmp, res=res)
   tmp[["cluster"]] <- Idents(tmp)
   UMAP <- DimPlot(object = tmp, reduction = "umap", label = TRUE)
   ggsave(paste0("/05_Result/07_co_lung/01_ref/01_qc/",samples[i],"/",samples[i],"_umap.pdf"), plot = UMAP, width = 8, height = 6)
