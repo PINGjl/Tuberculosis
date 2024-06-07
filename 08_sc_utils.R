@@ -1,5 +1,4 @@
 
-
 tibble_to_lists <- function(diff_gene, ..., col_name = "GeneName", gene_filter = T, fill = "") {
     group_vars <- enquos(..., .named = TRUE)
     col <- sym(col_name)
