@@ -46,7 +46,7 @@ print(p)
 dev.off()
 saveRDS(lung.new, file = '/07_co_lung/01_ref/04_celltype/Stroma/beforePC.rds')
 
-pc.num=c(1:12)
+pc.num=c(1:11,13)
 lung <- readRDS(file = '/07_co_lung/01_ref/04_celltype/Stroma/beforePC.rds')
 
 lung <- RunUMAP(lung, dims = pc.num)# ,min.dist=0.2,spread=3)
