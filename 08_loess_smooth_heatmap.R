@@ -1,6 +1,5 @@
 #' 
 #' @description 获取数据
-#' 
 #' @param .data seurat 对象
 #' @param time_series 时间序列变量列
 #' @param sample_number 每个时间点抽样数量
