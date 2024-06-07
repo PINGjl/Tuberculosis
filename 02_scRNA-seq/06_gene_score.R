@@ -14,7 +14,7 @@ for (i in c(1:10) ){
   Combination <- AddModuleScore(Combination, features=genes, seed=15, name="score")
 
   Combination$celltype <- factor(Combination$celltype,
-                             levels=c("AT1","AT2","Ciliated","Clu_Gob", "EC","Stroma",'Mast',"Classical_MC","Nonclassical_MC","Mac1","Mac2","Neu","mDC","pDC",'CD4+TC',"CD8+TC",'NK',"NKT","BC","Pla",'MKI67+_pro'), ordered=TRUE)
+                             levels=celltypes, ordered=TRUE)
 
   Combination$group <- factor(Combination$group,
                              levels=c("Ctrl","AL_TB", "L_TB"), ordered=TRUE)
