@@ -5,7 +5,6 @@ library(Seurat)
 library(pheatmap)
 setwd("/01_result/07_lung/00_scRNA_new/05_DEGs/up_up-down_down")
 
-
 #### input DEGs list
 deg_list <- as.data.frame(matrix(nrow=0,ncol=9))
 for (i in c("A_TB-Ctrl","F_TB-A_TB","F_TB-Ctrl")){
