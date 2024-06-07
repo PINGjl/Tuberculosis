@@ -72,7 +72,7 @@ dims <- c(1:30)
 samples <- c('Ctrl-1', 'Ctrl-3', 'Ctrl-2', 'Ctrl-4', 'Ctrl-5', 'Ctrl-6', 'Ctrl-7', 'AL_TB-1', 'L_TB-1', 'AL_TB-2', 'L_TB-2', 'AL_TB-3', 'L_TB-3', 'Ctrl-8', 'Ctrl-9', 'Ctrl-10', 'Ctrl-11', 'Ctrl-12', 'Ctrl-13', 'AL_TB-4', 'AL_TB-5', 'AL_TB-6', 'AL_TB-7', 'AL_TB-8', 'AL_TB-9', 'AL_TB-10', 'AL_TB-11', 'AL_TB-12', 'L_TB-4', 'L_TB-5', 'L_TB-6', 'L_TB-7', 'L_TB-8', 'L_TB-9', 'L_TB-10', 'L_TB-11', 'L_TB-12')
 res <- 0.8
 
-for (i in seq(1:13)){
+for (i in seq(1:37)){
   tmp <- readRDS(file = paste0("/05_Result/07_co_lung/01_ref/01_qc/",samples[i],"/",samples[i],"_bfPCR.rds"))
   tmp <- RunUMAP(tmp, dims = dims, verbose=F)
   tmp <- FindNeighbors(tmp, reduction = "pca", dims = dims)
@@ -89,7 +89,7 @@ for (i in seq(1:13)){
 pK.df <- data.frame(matrix(nrow=0, ncol=3))
 colnames(pK.df) <- c("Sample", "Optimal_pK","After_qc")
 
-for (i in c(1:13)){
+for (i in c(1:37)){
   sweep.res.list <- paramSweep_v3(get(samples[i]), PCs = dims[[i]], sct = T, num.cores=6)
   sweep.stats <- summarizeSweep(sweep.res.list, GT = FALSE)
   bcmvn <- find.pK(sweep.stats)
@@ -97,30 +97,30 @@ for (i in c(1:13)){
   tmp <- data.frame(Sample=samples[i], Optimal_pK=pK,After_qc=length(get(samples[i])@meta.data$orig.ident))
   pK.df <- rbind(pK.df, tmp)
   print(bcmvn)
-  print(paste0("--------------", samples[i], " completed (", i, "/13)--------------"))
+  print(paste0("--------------", samples[i], " completed (", i, "/37)--------------"))
 }
 write.table(pK.df,file ="/05_Result/07_co_lung/01_ref/01_qc/Optimal_pK.txt", sep = "\t" )
 
 doublet.prop <- data.frame(matrix(nrow=0, ncol=3))
 colnames(doublet.prop) <- c("Sample", "Number","Doublet_prop")
 
-dims <- list(c(1:30), c(1:30), c(1:30),c(1:30),c(1:30), c(1:30), c(1:30),c(1:30),c(1:30), c(1:30), c(1:30),c(1:30),c(1:30))
-ratio <- c(0.092,0.092,0.092,0.108,0.076,0.092,0.084,0.124,0.084,0.069,0.108,0.084,0.108)
+dims <- c(1:30)
+ratio <- pK.df$rat
 
-for (i in seq(1:13)) {
+for (i in seq(1:37)) {
   tmp <- readRDS(file = paste0("/05_Result/07_co_lung/01_ref/01_qc/",samples[i],"/",samples[i],"_PCR.rds"))
   pK.use <- as.numeric(as.character(pK.df$Optimal_pK[i]))
   homotypic.prop <- modelHomotypic(tmp@meta.data$cluster)
   nExp_poi <- round(ratio[i]*length(tmp@meta.data$orig.ident))
   nExp_poi.adj <- round(nExp_poi*(1-homotypic.prop))
-  tmp <- doubletFinder_v3(tmp, PCs = dims[[i]], pN = 0.25, pK = pK.use, nExp = nExp_poi.adj, reuse.pANN = FALSE, sct = T)
+  tmp <- doubletFinder_v3(tmp, PCs = dims, pN = 0.25, pK = pK.use, nExp = nExp_poi.adj, reuse.pANN = FALSE, sct = T)
   tmp[["doublet"]] <- tmp[[paste("DF.classifications_0.25", pK.use, nExp_poi.adj, sep="_")]]
   prop <- nExp_poi.adj/length(tmp@meta.data$cluster)
   prop.tmp <- data.frame(Sample=samples[i], Number=nExp_poi.adj, Doublet_prop=prop)
   doublet.prop <- rbind(doublet.prop, prop.tmp)
   saveRDS(tmp, file = paste0("/05_Result/07_co_lung/01_ref/01_qc/",samples[i],"/",samples[i],"_doublets.rds"))
   assign(samples[i], tmp)
-  print(paste0("--------------", samples[i], " completed (", i, "/13)--------------"))
+  print(paste0("--------------", samples[i], " completed (", i, "/37)--------------"))
 }
 
 write.table(doublet.prop,file ="/05_Result/07_co_lung/01_ref/01_qc/doublet.prop.txt", sep = "\t" )
