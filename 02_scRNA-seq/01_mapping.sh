@@ -1,3 +1,15 @@
+
+###Keep Mean reads closed 
+cd /01_rawdata/01_lung_TB_new/data/L_TB-11
+/02_Software/07_seqtk/seqtk/seqtk sample -2 -s100 TB_CD_B_17_S4_L005_R1_001.fastq.gz 0.6 > TB_CD_B_17_S60_L005_R1_001.fastq.gz
+/02_Software/07_seqtk/seqtk/seqtk sample -2 -s100 TB_CD_B_17_S4_L005_R2_001.fastq.gz 0.6 > TB_CD_B_17_S60_L005_R2_001.fastq.gz
+
+cd /dellstorage06/quj_lab/pingjiale/01_rawdata/01_lung_TB_new/data/AL_TB-11
+/02_Software/07_seqtk/seqtk/seqtk sample -2 -s100 TB_CD_N_17_S2_L001_R1_001.fastq.gz 0.5 > TB_CD_N_17_S50_L005_R1_001.fastq.gz
+/02_Software/07_seqtk/seqtk/seqtk sample -2 -s100 TB_CD_N_17_S2_L001_R2_001.fastq.gz 0.5 > TB_CD_N_17_S50_L005_R2_001.fastq.gz
+
+
+###mapping
 count=/01_result/07_lung/01_ref
 
 cd $count
