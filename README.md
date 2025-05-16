@@ -1,6 +1,6 @@
-# A single-cell transcriptomic atlas of the lungs of patients with pulmonary tuberculosis
+# Senescence and Inflammation as a Hallmark of Post-Tuberculosis Lung Impairment
 
-In this respository, find the annotated codes with the necessary details of all analyses for the manuscript "A single-cell transcriptomic atlas of the lungs of patients with pulmonary tuberculosis".
+In this respository, find the annotated codes with the necessary details of all analyses for the manuscript "Senescence and Inflammation as a Hallmark of Post-Tuberculosis Lung Impairment".
 
 ## 01_bulk RNA-seq
 The annotated codes with the necessary details of related analyses about bulk RNA-seq data.
